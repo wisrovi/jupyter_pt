@@ -1,0 +1,22 @@
+{
+  "id": "ad863041-6627-42bf-b959-082a58280a52",
+  "timestamp": "2023-07-05 09:45:46",
+  "model_version": "1.0",
+  "source": "/data/raw/license_recognition/1.jpg",
+  "crops": [
+      {
+      "id": "20a1fd91-8ccf-4cb9-a8a5-921006603179",
+      "class": {
+          "name": "car",
+          "id": 0
+      },
+      "confidence": 0.9014,
+      "bbox": {
+          "x": 108.81561279296875,
+          "y": 50.55780792236328,
+          "width": 525.6937255859375,
+          "height": 331.7890319824219
+      }
+      }
+    ]
+  }

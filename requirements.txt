@@ -1,0 +1,19 @@
+# external requirements
+click
+Sphinx
+coverage
+awscli
+flake8
+python-dotenv
+
+numpy
+pandas
+pillow
+matplotlib
+seaborn
+scipy
+urllib3
+wandb
+setuptools
+build
+python-slugify

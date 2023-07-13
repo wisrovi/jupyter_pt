@@ -1,0 +1,74 @@
+#FROM nvcr.io/nvidia/pytorch:20.12-py3
+#FROM bitnami/python:3.8
+#FROM tensorflow/tensorflow:latest-gpu
+FROM tensorflow/tensorflow:2.12.0-gpu
+
+# Install linux packages
+RUN apt update 
+RUN apt install -y zip 
+RUN apt install -y htop 
+RUN apt install -y screen 
+RUN apt install -y libgl1-mesa-glx
+RUN apt install -y libsm6 
+RUN apt install -y libxext6
+
+# Create working directory
+WORKDIR /usr/src/app
+
+RUN pip uninstall -y nvidia-tensorboard 
+RUN pip uninstall -y nvidia-tensorboard-plugin-dlprof
+RUN pip install --no-cache -U coremltools onnx gsutil notebook
+RUN pip install --no-cache -U torch
+RUN pip install --no-cache -U torchvision
+
+# Install tesseract
+#RUN apt install tesseract-ocr -y
+#RUN pip install pytesseract
+
+# Install librerias
+RUN mkdir /librerias
+WORKDIR /librerias
+COPY librerias .
+RUN pip install -e /librerias/general-utils
+
+
+WORKDIR /usr/src/app
+# Set environment variables
+ENV HOME=/tmp
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+
+RUN python3 -m pip install --upgrade pip
+
+# Install jupyterlab
+RUN pip install -U jupyterlab
+RUN pip install jupyter_contrib_nbextensions
+RUN pip install jupyter_nbextensions_configurator
+RUN jupyter contrib nbextension install --user
+RUN jupyter nbextensions_configurator enable --user
+RUN pip install autopep8
+ENV JUPYTER_ENABLE_LAB yes
+
+
+RUN pip install -U opencv-python
+RUN pip install -U scikit-learn scipy matplotlib
+RUN pip install --no-cache -U numpy
+RUN pip install --no-cache -U numpy==1.20.3
+RUN pip install --no-cache -U PyYAML==5.3.1
+RUN pip install --no-cache -U urllib3==1.26.11
+RUN pip install --no-cache -U wandb
+
+# Install python dependencies
+COPY requirements.txt /usr/src/app/requirements.txt
+RUN pip install -r requirements.txt 
+
+
+#RUN pip install -U tensorflow
+
+RUN apt install -y git
+
+
+
+# python -m jupyter lab --allow-root --ip=0.0.0.0 --notebook-dir=/tf
+CMD ["python", "-m", "jupyter", "lab", "--allow-root", "--ip=0.0.0.0" ,"--notebook-dir=/tf"]

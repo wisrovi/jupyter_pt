@@ -1,0 +1,33 @@
+version: '3.8'
+services:  
+  sidecar_pt:
+    tty: true
+    user: root
+    container_name: tensorflow_jupyter
+    build: 
+      context: .
+      dockerfile: Dockerfile.pt
+    #command: tail -f /dev/null
+    volumes:
+      - ./librerias:/librerias
+      - ./src:/usr/src/app
+      - ./data:/data
+      - ./models:/yolo_model
+      - /home/willians/Documentos/ecapturedtech/car_detection/Vehicle-Detection:/yolo_repo
+      - /home/willians/Documentos/github-wisrovi:/wisrovigithub
+      - /home/willians/Documentos/ecapturedtech/gitlab:/gitlab
+      - ./serverstorage:/serverstorage
+      - ./tf:/tf
+    ports:
+      - '8888:8888'
+    environment:
+      - GRANT_SUDO=yes
+      - NB_GID=100
+      - GEN_CERT=yes
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
