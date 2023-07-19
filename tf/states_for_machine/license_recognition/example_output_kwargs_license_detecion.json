@@ -1,0 +1,56 @@
+{
+"id": "ad863041-6627-42bf-b959-082a58280a52",
+"timestamp": "2023-07-05 09:45:46",
+"model_version": "1.0",
+"source": "/data/raw/license_recognition/1.jpg",
+"crops": [
+    {
+    "id": "20a1fd91-8ccf-4cb9-a8a5-921006603179",
+    "class": {
+        "name": "car",
+        "id": 0
+    },
+    "confidence": 0.9014,
+    "bbox": {
+        "x": 108.81561279296875,
+        "y": 50.55780792236328,
+        "width": 525.6937255859375,
+        "height": 331.7890319824219
+    },
+    "licenses": [
+        {
+        "id": "2a85192d-029e-45b3-9305-ba1aefb66ee9",
+        "model_version": "1.0",
+        "class": {
+            "name": "license",
+            "id": 0
+        },
+        "confidence": 0.92,
+        "timestamp": "2023-07-05 09:45:46",
+        "bbox": {
+            "x": 135.4435577392578,
+            "y": 173.078125,
+            "width": 290.92266845703125,
+            "height": 212.17189025878906
+        }
+        },
+        {
+        "id": "db026a4e-47c3-4650-9d97-a2f1e1b0e0ad",
+        "model_version": "1.0",
+        "class": {
+            "name": "license",
+            "id": 0
+        },
+        "confidence": 0.54,
+        "timestamp": "2023-07-05 09:45:46",
+        "bbox": {
+            "x": 0.19343261420726776,
+            "y": 79.25312805175781,
+            "width": 14.588891983032227,
+            "height": 87.39765930175781
+        }
+        }
+    ]
+    }
+]
+}

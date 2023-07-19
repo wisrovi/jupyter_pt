@@ -2,6 +2,7 @@ import time
 
 import __main__
 from typing import Union
+import traceback
 
 from .State import State
 
@@ -98,8 +99,12 @@ class Machine:
             try:
                 kwargs = self.execute(**kwargs)
             except Exception as e:
-                #kwargs["error"] = e
-                print(f'{self.tabular}[{__main__.__file__}]: Error: {e}')
+                kwargs["error"] = e
+                kwargs["traceback"] = traceback.format_exc()
+                try:
+                    print(f'{self.tabular}[{__main__.__file__}]: Error: {kwargs["error"]} - details: {kwargs["traceback"]}')
+                except:
+                    print(f'{self.tabular}: Error: {kwargs["error"]} - details: {kwargs["traceback"]}')
                 break
             self.to_next_state()
         return kwargs
