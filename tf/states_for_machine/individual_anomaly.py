@@ -4,6 +4,10 @@ from sklearn.ensemble import IsolationForest
 from sklearn.covariance import EllipticEnvelope
 from sklearn.cluster import DBSCAN
 
+import warnings
+warnings.filterwarnings('ignore')
+
+
 class IndividualAnomaly(State):
     
     def execute(self, **kwargs: dict) -> dict:
@@ -50,6 +54,7 @@ class IndividualAnomaly(State):
         except:
             y_pred_DBSCAN = []
     
+        umbral = kwargs.get("config", {}).get("umbral_anomaly", 0)
         votes = []
         if len(y_pred_IsolationForest) > 0:
             if len(y_pred_IsolationForest) == len(y_pred_EllipticEnvelope) == len(y_pred_DBSCAN):
@@ -58,7 +63,10 @@ class IndividualAnomaly(State):
                     for tmp_list in [y_pred_IsolationForest, y_pred_EllipticEnvelope, y_pred_DBSCAN]:
                         if tmp_list[i] == -1:
                             count += 1
-                    votes.append(count)
+                    if count > umbral:
+                        votes.append(count)
+                    else:
+                        votes.append(0)
 
         kwargs["anomaly"]["individual"]["IsolationForest"] = y_pred_IsolationForest
         kwargs["anomaly"]["individual"]["EllipticEnvelope"] = y_pred_EllipticEnvelope

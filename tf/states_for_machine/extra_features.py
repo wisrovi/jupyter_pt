@@ -2,6 +2,10 @@ from state_machine.State import State
 import pandas as pd
 import math
 
+import warnings
+warnings.filterwarnings('ignore')
+
+
 class ExtraFeatures(State):
 
     TIME_FRAME = 1 # second
@@ -38,6 +42,9 @@ class ExtraFeatures(State):
         if not kwargs.get("coordinates"):
             raise Exception("No coordinates in kwargs")      
 
+        if not kwargs.get("size_frame"):
+            raise Exception("No size_frame in kwargs")
+
         if not kwargs["coordinates"]["futures"]["times"]:
             raise Exception("No times in kwargs")
 
@@ -57,6 +64,7 @@ class ExtraFeatures(State):
         
         quadrants = [ self.get_quadrant(p, ref) for p in array ]
         df["quadrants"] = quadrants
+        df["time"] = [t["time"] for t in kwargs["data"]]
         
         df["original_coordinate_x"] = [p[0] for p in array]
         df["original_coordinate_y"] = [p[1] for p in array]

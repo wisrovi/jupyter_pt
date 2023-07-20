@@ -1,6 +1,10 @@
 from state_machine.State import State
 from statsmodels.tsa.arima.model import ARIMA
 
+import warnings
+warnings.filterwarnings('ignore')
+
+
 class ExtendData(State):
     
     cantidad_predicciones=2
@@ -24,7 +28,8 @@ class ExtendData(State):
 
         original_data = [ id["center"] for id in kwargs.get("data") ] 
         times = [t["time"] for t in kwargs["data"]][::-1]
-        # print(f"[ExtendData]: times: {times}")
+        kwargs["time"] = [int(t) for t in times]
+        #print(f"[ExtendData]: times: {times}")
 
         kwargs["coordinates"] = {
             "origin": original_data,
