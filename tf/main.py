@@ -1,6 +1,7 @@
 from states_for_machine.extend_data import ExtendData
 from states_for_machine.extra_features import ExtraFeatures
 from states_for_machine.individual_anomaly import IndividualAnomaly
+from states_for_machine.predict_cluster_social import Predict_cluster_social
 
 from state_machine.Machine import Machine
 
@@ -34,13 +35,18 @@ class Brain:
         return Machine(state=[
                 ExtendData(next_state="ExtraFeatures"), 
                 ExtraFeatures(next_state="IndividualAnomaly"),
-                IndividualAnomaly(next_state=None)
+                IndividualAnomaly(next_state="Predict_cluster_social"),
+                Predict_cluster_social(next_state=None),
             ], initial='ExtendData')
 
     @property
     def calibrations(self):
         with open(self.path_calibrations, 'rb') as archivo:
-            return pickle.load(archivo)
+            all_lines_saved, all_names_saved = pickle.load(archivo)
+            return {
+                "all_lines": all_lines_saved,
+                "all_names": all_names_saved
+            }
 
 
 brain = Brain()
@@ -50,10 +56,10 @@ data = {
     "data": get_info_vehicle(),
     "size_frame": get_shape_image(),  # visual reference or observation point,
     "config": {
-        "threshold_similarity": 45,  # Adjust the threshold value according to your needs, the higher the value the fewer groups it creates
-        "umbral_anomaly": 1
+        "social_sensibility": 50,  # Adjust the threshold value according to your needs, the higher the value the fewer clusters it creates
+        "umbral_individual_anomaly": 1  # Adjust the umbral_individual_anomaly value according to your individual sensibility, recommended value 1
     },    
-    "calibrations": brain.calibrations
+    "calibrations": brain.calibrations  # lines for define the normal social cluster, this lines are coordinates of the center of each vehicle in normal conduction
 }
 
 
@@ -62,11 +68,16 @@ result = machine.cicle(**data)
 
 
 del result["calibrations"] 
+del result["config"] 
+del result["time"] 
+del result["size_frame"] 
 
 print(" \n"*5)
 print(result.keys())
 print(result["anomaly"])
 
+
+exit()
 
 import json
 print(result)

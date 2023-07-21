@@ -54,7 +54,7 @@ class IndividualAnomaly(State):
         except:
             y_pred_DBSCAN = []
     
-        umbral = kwargs.get("config", {}).get("umbral_anomaly", 0)
+        umbral = kwargs.get("config", {}).get("umbral_individual_anomaly", 0)
         votes = []
         if len(y_pred_IsolationForest) > 0:
             if len(y_pred_IsolationForest) == len(y_pred_EllipticEnvelope) == len(y_pred_DBSCAN):
