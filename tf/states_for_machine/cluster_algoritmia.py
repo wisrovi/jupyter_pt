@@ -3,32 +3,37 @@ from collections import defaultdict
 from itertools import chain
 from numba import njit
 
-
-import time
-
-def timeit(func):
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"Tiempo de ejecución de '{func.__name__}': {elapsed_time:.6f} segundos")
-        return result
-    return wrapper
+import warnings
+warnings.filterwarnings('ignore')
 
 
 class ClusterAlgoritmia:
     
-    lineas_semejantes_lista = []
+    similar_lines_list = []
     trained = False
     
     def __init__(self, sensibility):
+        """
+        @type sensibility: float
+        @param sensibility: sensibility for cluster
+        """
         self.sensibility = sensibility
     
-    def train(self, all_lines):
+    def train(self, all_lines: list):
+        """
+        @type all_lines: list
+        @param all_lines: list with all lines
+        """
         self.all_lines = all_lines.copy()    
     
-    def predict(self, new_vehicles):
+    def predict(self, new_vehicles: list) -> list:
+        """
+        @type new_vehicles: list
+        @param new_vehicles: list with new vehicles
+
+        @rtype: list
+        @returns: list with predictions
+        """
         predictions = []
         for new_vehicle in new_vehicles:
             
@@ -37,18 +42,18 @@ class ClusterAlgoritmia:
             self.before = len(all_lines_class)
 
             if isinstance(new_vehicle, list):
+                # add new vehicle to all_lines_class for predict after of train model
                 all_lines_class.append(new_vehicle)
-            else:
-                print("No se puede predecir ", new_vehicle)
             
             after = len(all_lines_class)
             
-            self.lineas_semejantes_lista = self.get_semejantes(all_lines_class, self.sensibility)
+            self.similar_lines_list = self.get_similars(all_lines_class, self.sensibility)
             
             self.trained = True
 
             if isinstance(new_vehicle, list):
-                for i, similar_list in enumerate(self.lineas_semejantes_lista):                    
+                # if new_vehicle is exist and it is a list, extract the cluster of prediction
+                for i, similar_list in enumerate(self.similar_lines_list):                    
                     if after in similar_list:                    
                         predictions.append(i)   
                     
@@ -56,115 +61,205 @@ class ClusterAlgoritmia:
 
     @staticmethod
     def _calculate_directed_hausdorff( line_a, line_b):
+        """
+        Calculate the directed Hausdorff distance between two lines.
+
+        @type line_a: list
+        @param line_a: list with points of line a
+
+        @type line_b: list
+        @param line_b: list with points of line b
+
+        @rtype: float
+        @returns: float with distance
+        """
         return directed_hausdorff(line_a, line_b)[0]
 
-    def _calcule_distance_Hausdorff(self, todas_las_lineas) -> dict:
+    def _calcule_distance_Hausdorff(self, all_lines:list) -> dict:
         """
         Find the Hausdorff distance between each pair of lines.
+
+        @type all_lines: list
+        @param all_lines: list with all lines
+
+        @rtype: dict
+        @returns: dict with distances
         """
-        distancias_hausdorff = {}
+        distances_hausdorff = {}
     
-        # Find the Hausdorff distance between each pair of lines
-        for i, linea_a in enumerate(todas_las_lineas):
-            for j, linea_b in enumerate(todas_las_lineas):
+        for i, line_a in enumerate(all_lines):
+
+            for j, line_b in enumerate(all_lines):
+
                 if i != j:  # Evitar comparar una línea consigo misma
-                    distancia = self._calculate_directed_hausdorff(linea_a, linea_b)
-                    distancias_hausdorff[(i, j)] = distancia
+                    distance = self._calculate_directed_hausdorff(line_a, line_b)
+                    distances_hausdorff[(i, j)] = distance
         
-        return distancias_hausdorff
+        return distances_hausdorff
     
     @staticmethod
     @njit(nogil=True)
-    def _find_similar_lines(par:list, distancia:list, umbral_similitud:float = 45) -> list:
-        lineas_semejantes = []
-        for par, distancia in zip(par, distancia):
-            if distancia < umbral_similitud:
-                linea_a_idx, linea_b_idx = par
-                lineas_semejantes.append((linea_a_idx, linea_b_idx))
+    def _find_similar_lines(pair:list, distance:list, umbral_similary:float = 45) -> list:
+        """
+        Find the similar lines.
 
-        return lineas_semejantes
+        @type pair: list
+        @param pair: list with pairs of lines
+
+        @type distance: list
+        @param distance: list with distances
+
+        @type umbral_similary: float
+        @param umbral_similary: float with umbral for similary
+
+        @rtype: list
+        @returns: list with similar lines
+        """
+        similar_lines = []
+        for par, distance in zip(pair, distance):
+            if distance < umbral_similary:
+                line_a_idx, line_b_idx = par
+                similar_lines.append((line_a_idx, line_b_idx))
+
+        return similar_lines
 
     @staticmethod
-    def _create_defaultdict(pares_semejantes:list) -> dict:
-        # create a graph using a defaultdict dictionary
-        grafo = defaultdict(list)
-        for a, b in pares_semejantes:
-            grafo[a].append(b)
-            grafo[b].append(a)
-        return grafo
+    def _create_defaultdict(similar_pair:list) -> dict:
+        """
+        Create a defaultdict from a list of similar lines.
+
+        @type similar_pair: list
+        @param similar_pair: list with similar lines
+
+        @rtype: dict
+        @returns: dict with defaultdict
+        """
+        graph = defaultdict(list)
+        for a, b in similar_pair:
+            graph[a].append(b)
+            graph[b].append(a)
+        return graph
 
     @staticmethod
     @njit(nogil=True)
-    def _show_similar_lines(lineas_semejantes:list)-> dict:
+    def _show_similar_lines(similar_lines:list)-> dict:
         """
         show the similar lines
+
+        @type similar_lines: list
+        @param similar_lines: list with similar lines
+
+        @rtype: dict
+        @returns: dict with similar lines
         """
-        pares_semejantes = []
-        for idx_a, idx_b in lineas_semejantes:
-            # print(f"\tLínea {idx_a + 1} es semejante a Línea {idx_b + 1}")
-            pares_semejantes.append([idx_a + 1, idx_b + 1])
-        return pares_semejantes
+        similar_pairs = []
+        for idx_a, idx_b in similar_lines:
+            similar_pairs.append([idx_a + 1, idx_b + 1])
+        return similar_pairs
     
-    def _find_all_connected_components(self, grafo):
+    def _find_all_connected_components(self, graph:dict) -> list:
         """
         Find all connected components in a graph
+
+        @type graph: dict
+        @param graph: dict with graph
+
+        @rtype: list
+        @returns: list with all connected components
         """
-        visitados = set()
-        componentes_conectadas = []
-        for nodo in grafo:
-            if nodo not in visitados:
-                componente = self.encontrar_componente_conectada(nodo, grafo)
-                componentes_conectadas.append(componente)
-                visitados.update(componente)
-        return componentes_conectadas
+        visited = set()
+        connected_components = []
+        for nodo in graph:
+            if nodo not in visited:
+                component = self.find_connected_component(nodo, graph)
+                connected_components.append(component)
+                visited.update(component)
+        return connected_components
     
-    def get_semejantes(self, todas_las_lineas, umbral_similitud = 45):
-        distancias_hausdorff = self._calcule_distance_Hausdorff(todas_las_lineas)
-    
-        par = list(distancias_hausdorff.keys())
-        distancia = list(distancias_hausdorff.values())
-        lineas_semejantes = self._find_similar_lines(par, distancia, umbral_similitud)
-    
-        pares_semejantes = self._show_similar_lines(lineas_semejantes)     
-        grafo = self._create_defaultdict(pares_semejantes)
+    def get_similars(self, all_lines:list, umbral_similary:float = 45) -> list:
+        """
+        Find the similar lines.
 
+        @type all_lines: list
+        @param all_lines: list with all lines
+
+        @type umbral_similary: float
+        @param umbral_similary: float with umbral for similary
+
+        @rtype: list
+        @returns: list with similar lines
+        """
+        distances_hausdorff = self._calcule_distance_Hausdorff(all_lines)
     
-        componentes_conectadas = self._find_all_connected_components(grafo)
+        pair = list(distances_hausdorff.keys())
+        distance = list(distances_hausdorff.values())
+        lineas_semejantes = self._find_similar_lines(pair, distance, umbral_similary)
     
-        lineas_semejantes_lista = [list(componente) for componente in componentes_conectadas]
+        similar_pairs = self._show_similar_lines(lineas_semejantes)     
+        graph = self._create_defaultdict(similar_pairs)
+    
+        conected_components = self._find_all_connected_components(graph)
+    
+        similar_lines_list = [list(component) for component in conected_components]
         
-        return lineas_semejantes_lista
+        return similar_lines_list
 
-    # Función para encontrar la componente conectada desde un nodo dado
     @staticmethod
-    def encontrar_componente_conectada(nodo, grafo:dict):
-        visitados = set()
-        componente = set()
-        pila = [nodo]
+    def find_connected_component(nodo, graph:dict) -> set:
+        """
+        Find the connected component of a node in a graph
 
-        while pila:
-            actual = pila.pop()
-            if actual not in visitados:
-                visitados.add(actual)
-                componente.add(actual)
-                pila.extend(grafo[actual])
+        @type nodo: int
+        @param nodo: int with node
 
-        return componente
+        @type graph: dict
+        @param graph: dict with graph
 
-    def brothers(self, cluster:int):
+        @rtype: set
+        @returns: set with connected component
+        """
+        visited = set()
+        component = set()
+        stack = [nodo]
+
+        while stack:
+            _now = stack.pop()
+            if _now not in visited:
+                visited.add(_now)
+                component.add(_now)
+                stack.extend(graph[_now])
+
+        return component
+
+    def brothers(self, cluster:int) -> list:
+        """
+        Find the brothers of a cluster
+
+        @type cluster: int
+        @param cluster: int with cluster
+
+        @rtype: list
+        @returns: list with brothers
+        """
+
         if self.trained:   # bool, especific if the model is trained     
             conten_cluster = []
-            for d in self.lineas_semejantes_lista[cluster]:
+            for d in self.similar_lines_list[cluster]:
                 if d < len(self.all_lines):
                     conten_cluster.append(d-1)      
             return conten_cluster
         return []
 
     @property
-    @njit(nogil=True)  # nogil=True for the GIL to be released
     def get_clusters(self):
+        """
+        Find the clusters
+
+        @rtype: list
+        @returns: list with clusters
+        """
         temp = []
-        for cluster in range(len(self.lineas_semejantes_lista)):
+        for cluster in range(len(self.similar_lines_list)):
             conten_cluster = self.brothers(cluster)
             temp.append(conten_cluster)
         return temp
