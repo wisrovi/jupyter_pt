@@ -68,10 +68,10 @@ class IndividualAnomaly(State):
                     else:
                         votes.append(0)
 
-        kwargs["anomaly"]["individual"]["IsolationForest"] = y_pred_IsolationForest
-        kwargs["anomaly"]["individual"]["EllipticEnvelope"] = y_pred_EllipticEnvelope
-        kwargs["anomaly"]["individual"]["DBSCAN"] = y_pred_DBSCAN
-        kwargs["anomaly"]["individual"]["summary"] = votes
-        kwargs["anomaly"]["individual"]["there_are"] = len(list(set(votes))) > 0
+        # kwargs["anomaly"]["individual"]["IsolationForest"] = y_pred_IsolationForest
+        # kwargs["anomaly"]["individual"]["EllipticEnvelope"] = y_pred_EllipticEnvelope
+        # kwargs["anomaly"]["individual"]["DBSCAN"] = y_pred_DBSCAN
+        kwargs["anomaly"]["individual"]["coordinate_with_anomaly"] = [ v>0 for v in votes]
+        kwargs["anomaly"]["individual"]["behavior"] = len(list(set(votes))) > 0
 
         return kwargs

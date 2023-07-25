@@ -139,7 +139,7 @@ class Model_RandomForestClassifier:
         print(f"Precisión del modelo: {precision:.2f}")
         
         # show the classification report
-        report = classification_report(y_test, y_pred)#, target_names=names)
+        report = classification_report(y_test, y_pred)
         m_c = confusion_matrix(y_test, y_pred)
 
         self.modelo_rf = modelo_rf

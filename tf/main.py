@@ -1,7 +1,7 @@
 from states_for_machine.extend_data import ExtendData
 from states_for_machine.extra_features import ExtraFeatures
 from states_for_machine.individual_anomaly import IndividualAnomaly
-from states_for_machine.predict_cluster_social import Predict_cluster_social
+from states_for_machine.social_anomaly_predict import Social_anomaly
 
 from state_machine.Machine import Machine
 
@@ -9,7 +9,27 @@ import pickle
 import pandas as pd
 
 
-def get_info_vehicle():
+def get_info_vehicle() -> list:
+    """
+    method to get info vehicle, you can replace this method for your method to get info vehicle, for example,
+    you can use a method to get info vehicle from a video or from a camera with tracking algorithm
+
+    the structure for return is:
+    [
+        {
+            "center": (x, y),
+            "time": time
+        },
+        {
+            "center": (x, y),
+            "time": time
+        },
+        ...
+    ]
+
+    @rtype: list
+    @returns: list with info vehicle
+    """
     dataframe = pd.read_csv("/serverstorage/dataset_tailandia/0246.csv")
 
     data_to_process = []
@@ -23,43 +43,30 @@ def get_info_vehicle():
     return data_to_process
 
 
-def get_shape_image():
-    return (1080, 1920)
+def get_visual_observation_point():
+    return (540, 960)
 
 
 class Brain:
-    path_calibrations = "/serverstorage/dataset_tailandia/calibration_dataset.pkl"
-
     @property
     def machine(self):
         return Machine(state=[
                 ExtendData(next_state="ExtraFeatures"), 
                 ExtraFeatures(next_state="IndividualAnomaly"),
-                IndividualAnomaly(next_state="Predict_cluster_social"),
-                Predict_cluster_social(next_state=None),
+                IndividualAnomaly(next_state="Social_anomaly"),
+                Social_anomaly(next_state=None),
             ], initial='ExtendData')
-
-    @property
-    def calibrations(self):
-        with open(self.path_calibrations, 'rb') as archivo:
-            all_lines_saved, all_names_saved = pickle.load(archivo)
-            return {
-                "all_lines": all_lines_saved,
-                "all_names": all_names_saved
-            }
 
 
 brain = Brain()
-brain.path_calibrations = "/serverstorage/dataset_tailandia/calibration_dataset.pkl"
 
 data = {
-    "data": get_info_vehicle(),
-    "size_frame": get_shape_image(),  # visual reference or observation point,
+    "data": get_info_vehicle(),  # Data to process to find anomaly according to conduction behavior
+    "visual_observation_point": get_visual_observation_point(),  # visual reference or observation point,
     "config": {
-        "social_sensibility": 50,  # Adjust the threshold value according to your needs, the higher the value the fewer clusters it creates
+        "path_saved_model": "Model_RandomForestClassifier.pkl",  # Path to the model to be used for social anomaly detection
         "umbral_individual_anomaly": 1  # Adjust the umbral_individual_anomaly value according to your individual sensibility, recommended value 1
-    },    
-    "calibrations": brain.calibrations  # lines for define the normal social cluster, this lines are coordinates of the center of each vehicle in normal conduction
+    },        
 }
 
 
@@ -67,29 +74,11 @@ machine = brain.machine
 result = machine.cicle(**data)
 
 
-del result["calibrations"] 
 del result["config"] 
 del result["time"] 
-del result["size_frame"] 
+del result["visual_observation_point"] 
 
 print(" \n"*5)
 print(result.keys())
+print(result["data"])
 print(result["anomaly"])
-
-
-exit()
-
-import json
-print(result)
-
-
-
-import cv2
-import matplotlib.pyplot as plt
-fondo = "/serverstorage/Tailandia/Tailandia 001.jpg"
-fondo = cv2.imread(fondo)
-plt.figure(figsize=(20,8))
-plt.title(f'Movimientos actuales del vehiculo')
-plt.imshow(fondo)
-plt.savefig(f"/serverstorage/{DATASET}_{type_vehicle_graph}.png")
-#plt.show()

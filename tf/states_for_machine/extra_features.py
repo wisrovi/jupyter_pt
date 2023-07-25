@@ -42,8 +42,8 @@ class ExtraFeatures(State):
         if not kwargs.get("coordinates"):
             raise Exception("No coordinates in kwargs")      
 
-        if not kwargs.get("size_frame"):
-            raise Exception("No size_frame in kwargs")
+        if not kwargs.get("visual_observation_point"):
+            raise Exception("No visual_observation_point in kwargs")
 
         if not kwargs["coordinates"]["futures"]["times"]:
             raise Exception("No times in kwargs")
@@ -58,7 +58,7 @@ class ExtraFeatures(State):
         df = pd.DataFrame()
         
         array = kwargs["coordinates"]['origin'][:]
-        ref = kwargs["size_frame"]
+        ref = kwargs["visual_observation_point"]
         
         original_size = len(kwargs["coordinates"]['origin'])
         
@@ -158,13 +158,39 @@ class ExtraFeatures(State):
 
         return kwargs
 
-    def velocity(self, distance, time_=None):
+    def velocity(self, distance:int, time_:int=None) -> float:
+        """
+        This method calculates the speed of a point,
+        the distance is the distance between the current point and the previous point,
+        the time is the time between the current point and the previous point
+
+        @type distance: int
+        @param distance: distance between the current point and the previous point
+
+        @type time_: int
+        @param time_: time between the current point and the previous point
+
+        @rtype: float
+        @returns: speed of a point
+        """
         if time_ is None or time_ == 0:
             time_ = self.TIME_FRAME
         return round(distance/time_, 2)
 
     @staticmethod 
-    def angle(ref, point):
+    def angle(ref:tuple, point:tuple) -> float:
+        """
+        This method calculates the angle of a point with respect to a reference point
+
+        @type ref: tuple
+        @param ref: reference point
+
+        @type point: tuple
+        @param point: point to calculate the angle
+
+        @rtype: float
+        @returns: angle of a point with respect to a reference point
+        """
         delta_x = point[0] - ref[0]
         delta_y = point[1] - ref[1]
         
@@ -183,19 +209,67 @@ class ExtraFeatures(State):
         
 
     @staticmethod 
-    def distanceX(start, end):
+    def distanceX(start:tuple, end:tuple) -> float:
+        """
+        This method calculates the distance in X between two points
+
+        @type start: tuple
+        @param start: start point
+
+        @type end: tuple
+        @param end: end point
+
+        @rtype: float
+        @returns: distance in X between two points
+        """
         return end[0] - start[0]
 
     @staticmethod 
-    def distanceY(start, end):
+    def distanceY(start:tuple, end:tuple) -> float:
+        """
+        This method calculates the distance in Y between two points
+
+        @type start: tuple
+        @param start: start point
+
+        @type end: tuple
+        @param end: end point
+
+        @rtype: float
+        @returns: distance in Y between two points
+        """
         return end[1] - start[1]
     
     @staticmethod 
-    def distance(start, end):
+    def distance(start:tuple, end:tuple) -> float:
+        """
+        This method calculates the Pythagoric distance between two points
+
+        @type start: tuple
+        @param start: start point
+
+        @type end: tuple
+        @param end: end point
+
+        @rtype: float
+        @returns: Pythagoric distance between two points
+        """
         return round(math.sqrt((end[0] - start[0])**2 + (end[1] - start[1])**2), 2)
 
     @staticmethod 
-    def get_quadrant(p, ref):
+    def get_quadrant(p:tuple, ref:tuple) -> int:
+        """
+        This method calculates the quadrant of a point with respect to a reference point
+
+        @type p: tuple
+        @param p: point to calculate the quadrant
+
+        @type ref: tuple
+        @param ref: reference point
+
+        @rtype: int
+        @returns: quadrant of a point with respect to a reference point
+        """
         if p[0] > ref[0] and p[1] > ref[1]:
             return 1
         elif p[0] < ref[0] and p[1] > ref[1]:
